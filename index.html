@@ -111,17 +111,15 @@
                 context.requestSession();
             });
 
-            context.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(event) {
-                const castState = event.castState;
-                updateCastButton(castState, context.getDeviceState());
+            // Listen for any state changes and update the UI
+            context.addEventListener(cast.framework.CastContextEventType.STATE_CHANGED, function() {
+                updateCastButton();
             });
 
-            context.addEventListener(cast.framework.CastContextEventType.DEVICE_STATE_CHANGED, function(event) {
-                const deviceState = event.deviceState;
-                updateCastButton(context.getCastState(), deviceState);
-            });
-
-            function updateCastButton(castState, deviceState) {
+            function updateCastButton() {
+                const castState = context.getCastState();
+                const deviceState = context.getDeviceState();
+                
                 if (castState === cast.framework.CastState.CONNECTED) {
                     console.log('Successfully connected to a Chromecast device!');
                     castIconOff.style.display = 'none';
@@ -140,14 +138,15 @@
                     } else if (deviceState === cast.framework.DeviceState.AVAILABLE) {
                         castStatusMessage.style.display = 'none';
                         customCastButton.disabled = false;
-                    } else {
+                    } else { // This handles other states like NOT_AVAILABLE
                         castStatusMessage.style.display = 'none';
                         customCastButton.disabled = false;
                     }
                 }
             }
 
-            updateCastButton(context.getCastState(), context.getDeviceState());
+            // Call the function once to set the initial UI state
+            updateCastButton();
         }
 
         function loadMedia() {
