@@ -28,12 +28,16 @@
   </button>
 
   <script>
-    // Wait for the Cast SDK to load before accessing it
     window.__onGCastApiAvailable = function(isAvailable) {
-      console.log("Cast SDK available?", isAvailable);
-
       if (isAvailable) {
-        initializeCast();
+        const waitForFramework = setInterval(() => {
+          if (window.cast && cast.framework) {
+            clearInterval(waitForFramework);
+            initializeCast();
+          }
+        }, 100); // check every 100ms
+      } else {
+        console.error("Cast SDK not available.");
       }
     };
 
