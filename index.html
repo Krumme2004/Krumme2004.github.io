@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Radio Als Chromecast 2</title>
-  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+  <title>Radio Als Chromecast</title>
+  <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <style>
     body {
       background: black;
@@ -28,8 +28,17 @@
   </button>
 
   <script>
-    window['__onGCastApiAvailable'] = function(isAvailable) {
-      if (!isAvailable) return;
+    // Wait for the Cast SDK to load before accessing it
+    window.__onGCastApiAvailable = function(isAvailable) {
+      console.log("Cast SDK available?", isAvailable);
+
+      if (isAvailable) {
+        initializeCast();
+      }
+    };
+
+    function initializeCast() {
+      console.log("Initializing Cast...");
 
       const context = cast.framework.CastContext.getInstance();
       context.setOptions({
@@ -37,26 +46,34 @@
         autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
       });
 
-      document.getElementById("cast-button").addEventListener("click", async () => {
+      const castButton = document.getElementById("cast-button");
+
+      castButton.addEventListener("click", async () => {
+        console.log("Cast button clicked");
+
         try {
           const session = await context.requestSession();
+          console.log("Session started");
+
           const mediaInfo = new chrome.cast.media.MediaInfo(
-            'https://corsproxy.io/?https://stream.classicpop.dk/radioals',
+            'https://stream.classicpop.dk/radioals',
             'audio/mpeg'
           );
+
           mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
-          mediaInfo.metadata.title = "Radio Als - Classic Pop";
+          mediaInfo.metadata.title = "Radio Als – Classic Pop";
 
           const request = new chrome.cast.media.LoadRequest(mediaInfo);
+
           session.loadMedia(request).then(
-            () => console.log("Casting started"),
-            (err) => console.error("Load failed:", err)
+            () => console.log("Media successfully loaded and casting"),
+            err => console.error("Media load failed", err)
           );
-        } catch (e) {
-          console.error("Cast failed:", e);
+        } catch (err) {
+          console.error("Cast session error:", err);
         }
       });
-    };
+    }
   </script>
 </body>
 </html>
