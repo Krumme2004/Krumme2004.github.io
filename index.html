@@ -1,42 +1,91 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Chromecast Test</title>
-    <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-  </head>
-  <body>
-    <h1>Cast Test</h1>
-    <button is="google-cast-button" style="height: 50px; width: 50px;"></button>
-
-    <script>
-      window.__onGCastApiAvailable = function(isAvailable) {
-        if (isAvailable) {
-          initializeCast();
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Pop Denmark - Castable Live Stream</title>
+    
+    <script src="//www.gstatic.com/cv/js/sender/prod/receiver_framework.js"></script>
+    
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        
+        /* You might need some CSS to style the cast button */
+        google-cast-button {
+            --google-cast-button-display-state-off-icon: url(https://www.gstatic.com/chromecast/images/cast_icon_idle.svg);
+            --google-cast-button-display-state-on-icon: url(https://www.gstatic.com/chromecast/images/cast_icon_connected.svg);
+            --google-cast-button-display-state-connecting-icon: url(https://www.gstatic.com/chromecast/images/cast_icon_connecting.svg);
+            width: 24px;
+            height: 24px;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
         }
-      };
+    </style>
+</head>
+<body>
 
-      function initializeCast() {
-        cast.framework.CastContext.getInstance().setOptions({
-          receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-        });
+    <h1>Classic Pop Denmark</h1>
+    <h2>Live Audio Stream</h2>
 
-        const context = cast.framework.CastContext.getInstance();
-        context.addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, function(event) {
-          if (event.sessionState === cast.framework.SessionState.SESSION_STARTED) {
-            const mediaInfo = new chrome.cast.media.MediaInfo(
-              'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-              'audio/mpeg'
-            );
+    <button is="google-cast-button"></button>
+
+    <br><br>
+    
+    <p>Click the cast button to stream this radio station to your Chromecast device.</p>
+    
+    <script>
+        // The SDK will call this function when it's ready.
+        window.__onGCastApiAvailable = function(isAvailable) {
+          if (isAvailable) {
+            initializeCastApi();
+          }
+        };
+
+        function initializeCastApi() {
+          const context = cast.framework.CastContext.getInstance();
+          const options = new cast.framework.CastOptions();
+          
+          // Use the default media receiver
+          options.receiverApplicationId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+          
+          context.setOptions(options);
+
+          context.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(event) {
+            if (event.castState === cast.framework.CastState.CONNECTED) {
+              console.log('Connected to a Chromecast device!');
+              loadMedia();
+            } else if (event.castState === cast.framework.CastState.NOT_CONNECTED) {
+              console.log('Disconnected from Chromecast.');
+            }
+          });
+        }
+
+        function loadMedia() {
+          const context = cast.framework.CastContext.getInstance();
+          const session = context.getCurrentSession();
+          
+          if (session) {
+            // The URL of your audio stream
+            const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mp3');
+            
+            // Add metadata for a better user experience
+            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+            mediaInfo.metadata.title = 'Classic Pop Denmark';
+            mediaInfo.metadata.images = [new chrome.cast.Image('https://classicpop.dk/img/logo.png')]; // Use your website logo here
+
             const request = new chrome.cast.media.LoadRequest(mediaInfo);
-            context.getCurrentSession().loadMedia(request).then(
-              () => console.log('Cast succeeded'),
-              (e) => console.error('Cast failed', e)
+            
+            session.loadMedia(request).then(
+              function() {
+                console.log('Stream loaded and playing successfully on Chromecast.');
+              },
+              function(errorCode) {
+                console.error('Error loading media: ' + errorCode);
+              }
             );
           }
-        });
-      }
+        }
     </script>
-  </body>
+</body>
 </html>
