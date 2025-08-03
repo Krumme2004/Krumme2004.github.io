@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classic Pop Denmark - Castable Live Stream</title>
+    <title>Radio Als Denmark - Castable Live Stream</title>
     
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
     
@@ -88,6 +88,9 @@
     <p>Click the cast button to stream this radio station to your Chromecast device.</p>
     
     <script>
+        let currentSession = null;
+        let isCasting = false;
+
         window.__onGCastApiAvailable = function(isAvailable) {
             if (isAvailable) {
                 initializeCastApi();
@@ -97,80 +100,95 @@
         };
 
         function initializeCastApi() {
-            const context = cast.framework.CastContext.getInstance();
-            const options = new cast.framework.CastOptions();
-            options.receiverApplicationId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-            context.setOptions(options);
-
             const customCastButton = document.getElementById('custom-cast-button');
             const castStatusMessage = document.getElementById('cast-status-message');
             const castIconOff = document.getElementById('cast-icon-off');
             const castIconOn = document.getElementById('cast-icon-on');
             
+            // Set up the API configuration
+            const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
+            const apiConfig = new chrome.cast.ApiConfig(
+                sessionRequest,
+                onSessionSuccess,
+                onReceiverListener,
+                chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED
+            );
+
+            chrome.cast.initialize(apiConfig, onInitSuccess, onError);
+
             customCastButton.addEventListener('click', () => {
-                context.requestSession();
-            });
-
-            // Listen for any state changes and update the UI
-            context.addEventListener(cast.framework.CastContextEventType.STATE_CHANGED, function() {
-                updateCastButton();
-            });
-
-            function updateCastButton() {
-                const castState = context.getCastState();
-                const deviceState = context.getDeviceState();
-                
-                if (castState === cast.framework.CastState.CONNECTED) {
-                    console.log('Successfully connected to a Chromecast device!');
-                    castIconOff.style.display = 'none';
-                    castIconOn.style.display = 'block';
-                    castStatusMessage.style.display = 'none';
-                    customCastButton.disabled = false;
-                    loadMedia();
+                if (isCasting) {
+                    currentSession.stop();
                 } else {
-                    castIconOff.style.display = 'block';
-                    castIconOn.style.display = 'none';
-                    if (deviceState === cast.framework.DeviceState.NO_DEVICES_AVAILABLE) {
-                        console.log('No Chromecast devices found on your network.');
-                        castStatusMessage.style.display = 'block';
-                        castStatusMessage.textContent = 'No Chromecast devices found on your network.';
-                        customCastButton.disabled = true;
-                    } else if (deviceState === cast.framework.DeviceState.AVAILABLE) {
-                        castStatusMessage.style.display = 'none';
-                        customCastButton.disabled = false;
-                    } else { // This handles other states like NOT_AVAILABLE
-                        castStatusMessage.style.display = 'none';
-                        customCastButton.disabled = false;
-                    }
+                    chrome.cast.requestSession(onSessionSuccess, onError);
+                }
+            });
+
+            function onInitSuccess() {
+                console.log('Cast API initialized successfully!');
+            }
+
+            function onError(error) {
+                console.error('Cast API error:', error);
+            }
+
+            function onSessionSuccess(session) {
+                console.log('Session started:', session);
+                currentSession = session;
+                isCasting = true;
+                updateCastButton();
+                currentSession.addUpdateListener(sessionUpdateListener);
+                loadMedia();
+            }
+
+            function sessionUpdateListener(isAlive) {
+                if (!isAlive) {
+                    isCasting = false;
+                    currentSession = null;
+                    updateCastButton();
                 }
             }
 
-            // Call the function once to set the initial UI state
-            updateCastButton();
+            function onReceiverListener(availability) {
+                if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
+                    console.log('Chromecast receivers are available.');
+                    castStatusMessage.style.display = 'none';
+                    customCastButton.disabled = false;
+                } else {
+                    console.log('No Chromecast receivers found.');
+                    castStatusMessage.style.display = 'block';
+                    castStatusMessage.textContent = 'No Chromecast devices found on your network.';
+                    customCastButton.disabled = true;
+                }
+            }
+            
+            function updateCastButton() {
+                if (isCasting) {
+                    castIconOff.style.display = 'none';
+                    castIconOn.style.display = 'block';
+                } else {
+                    castIconOff.style.display = 'block';
+                    castIconOn.style.display = 'none';
+                }
+            }
         }
 
         function loadMedia() {
-            const context = cast.framework.CastContext.getInstance();
-            const session = context.getCurrentSession();
-            
-            if (session) {
+            if (currentSession) {
                 const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mp3');
                 
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                mediaInfo.metadata.title = 'Classic Pop Denmark';
+                mediaInfo.metadata.title = 'Radio Als';
                 mediaInfo.metadata.images = [new chrome.cast.Image('https://classicpop.dk/img/logo.png')];
                 
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
                 
-                session.loadMedia(request).then(
-                    function() {
-                        console.log('Stream loaded and playing successfully on Chromecast.');
-                    },
-                    function(errorCode) {
-                        console.error('Error loading media: ' + errorCode);
-                    }
-                );
+                currentSession.loadMedia(request, onMediaSuccess, onError);
             }
+        }
+        
+        function onMediaSuccess() {
+            console.log('Stream loaded and playing successfully on Chromecast.');
         }
     </script>
 </body>
