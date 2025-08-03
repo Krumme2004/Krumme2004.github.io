@@ -40,7 +40,7 @@
       document.getElementById("cast-button").addEventListener("click", async () => {
         try {
           const session = await context.requestSession();
-          const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
+          const mediaInfo = new chrome.cast.media.MediaInfo('https://corsproxy.io/?https://stream.classicpop.dk/radioals', 'audio/mpeg');
           mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
           mediaInfo.metadata.title = "Radio Als - Classic Pop";
 
