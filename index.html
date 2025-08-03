@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classic Pop Denmark - Castable Live Stream</title>
     
-    <script src="//www.gstatic.com/cv/js/sender/prod/receiver_framework.js"></script>
+    <script src="https://www.gstatic.com/cast/sdk/libs/sender/1.0/cast_sender.js?loadCastFramework=1"></script>
     
     <style>
         body { 
@@ -108,18 +108,15 @@
             const castIconOff = document.getElementById('cast-icon-off');
             const castIconOn = document.getElementById('cast-icon-on');
             
-            // Add a click listener to your custom button
             customCastButton.addEventListener('click', () => {
                 context.requestSession();
             });
 
-            // Listen for the cast state change to update your custom UI
             context.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(event) {
                 const castState = event.castState;
                 updateCastButton(castState, context.getDeviceState());
             });
 
-            // Listen for device availability changes
             context.addEventListener(cast.framework.CastContextEventType.DEVICE_STATE_CHANGED, function(event) {
                 const deviceState = event.deviceState;
                 updateCastButton(context.getCastState(), deviceState);
@@ -132,25 +129,25 @@
                     castIconOn.style.display = 'block';
                     castStatusMessage.style.display = 'none';
                     customCastButton.disabled = false;
-                    loadMedia(); // Load the media once connected
+                    loadMedia();
                 } else {
                     castIconOff.style.display = 'block';
                     castIconOn.style.display = 'none';
                     if (deviceState === cast.framework.DeviceState.NO_DEVICES_AVAILABLE) {
+                        console.log('No Chromecast devices found on your network.');
                         castStatusMessage.style.display = 'block';
                         castStatusMessage.textContent = 'No Chromecast devices found on your network.';
                         customCastButton.disabled = true;
                     } else if (deviceState === cast.framework.DeviceState.AVAILABLE) {
                         castStatusMessage.style.display = 'none';
                         customCastButton.disabled = false;
-                    } else { // Handle other states like NOT_AVAILABLE
+                    } else {
                         castStatusMessage.style.display = 'none';
                         customCastButton.disabled = false;
                     }
                 }
             }
 
-            // Initial check on page load
             updateCastButton(context.getCastState(), context.getDeviceState());
         }
 
@@ -162,8 +159,8 @@
                 const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mp3');
                 
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                mediaInfo.metadata.title = 'Radio Als';
-                mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Favicon.png')];
+                mediaInfo.metadata.title = 'Classic Pop Denmark';
+                mediaInfo.metadata.images = [new chrome.cast.Image('https://classicpop.dk/img/logo.png')];
                 
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
                 
