@@ -88,6 +88,9 @@
     <p>Click the cast button to stream a test audio file.</p>
     
     <script>
+        let currentSession = null;
+        let isCasting = false;
+
         window.__onGCastApiAvailable = function(isAvailable) {
             if (isAvailable) {
                 initializeCastApi();
@@ -97,94 +100,95 @@
         };
 
         function initializeCastApi() {
-            // Check if the modern framework API is available
-            if (typeof cast !== 'undefined' && cast.framework && cast.framework.CastContext) {
-                const context = cast.framework.CastContext.getInstance();
-                const options = new cast.framework.CastOptions();
-                options.receiverApplicationId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-                context.setOptions(options);
+            const customCastButton = document.getElementById('custom-cast-button');
+            const castStatusMessage = document.getElementById('cast-status-message');
+            const castIconOff = document.getElementById('cast-icon-off');
+            const castIconOn = document.getElementById('cast-icon-on');
+            
+            // Set up the API configuration for the older API
+            const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
+            const apiConfig = new chrome.cast.ApiConfig(
+                sessionRequest,
+                onSessionSuccess,
+                onReceiverListener,
+                chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED
+            );
 
-                const customCastButton = document.getElementById('custom-cast-button');
-                const castStatusMessage = document.getElementById('cast-status-message');
-                const castIconOff = document.getElementById('cast-icon-off');
-                const castIconOn = document.getElementById('cast-icon-on');
-                
-                customCastButton.addEventListener('click', () => {
-                    context.requestSession();
-                });
+            chrome.cast.initialize(apiConfig, onInitSuccess, onError);
 
-                function updateCastButton() {
-                    const castState = context.getCastState();
-                    const deviceState = context.getDeviceState();
-                    
-                    if (castState === cast.framework.CastState.CONNECTED) {
-                        console.log('Successfully connected to a Chromecast device!');
-                        castIconOff.style.display = 'none';
-                        castIconOn.style.display = 'block';
-                        castStatusMessage.style.display = 'none';
-                        customCastButton.disabled = false;
-                        loadMedia();
-                    } else {
-                        castIconOff.style.display = 'block';
-                        castIconOn.style.display = 'none';
-                        if (deviceState === cast.framework.DeviceState.NO_DEVICES_AVAILABLE) {
-                            console.log('No Chromecast devices found on your network.');
-                            castStatusMessage.style.display = 'block';
-                            castStatusMessage.textContent = 'No Chromecast devices found on your network.';
-                            customCastButton.disabled = true;
-                        } else if (deviceState === cast.framework.DeviceState.AVAILABLE) {
-                            castStatusMessage.style.display = 'none';
-                            customCastButton.disabled = false;
-                        } else { 
-                            castStatusMessage.style.display = 'none';
-                            customCastButton.disabled = false;
-                        }
-                    }
+            customCastButton.addEventListener('click', () => {
+                if (isCasting) {
+                    currentSession.stop();
+                } else {
+                    chrome.cast.requestSession(onSessionSuccess, onError);
                 }
-                
-                context.addEventListener(cast.framework.CastContextEventType.STATE_CHANGED, function() {
-                    updateCastButton();
-                });
+            });
 
+            function onInitSuccess() {
+                console.log('Cast API initialized successfully!');
+            }
+
+            function onError(error) {
+                console.error('Cast API error:', error);
+            }
+
+            function onSessionSuccess(session) {
+                console.log('Session started:', session);
+                currentSession = session;
+                isCasting = true;
                 updateCastButton();
-            } else {
-                // Fallback for older API versions
-                console.error("Modern cast.framework API not available.");
-                // We'll leave the button disabled and show a message in this case
-                const castStatusMessage = document.getElementById('cast-status-message');
-                const customCastButton = document.getElementById('custom-cast-button');
-                customCastButton.disabled = true;
-                castStatusMessage.style.display = 'block';
-                castStatusMessage.textContent = 'Casting is not available on your browser. Please update to a modern version of Chrome.';
+                currentSession.addUpdateListener(sessionUpdateListener);
+                loadMedia();
+            }
+
+            function sessionUpdateListener(isAlive) {
+                if (!isAlive) {
+                    isCasting = false;
+                    currentSession = null;
+                    updateCastButton();
+                }
+            }
+
+            function onReceiverListener(availability) {
+                if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
+                    console.log('Chromecast receivers are available.');
+                    castStatusMessage.style.display = 'none';
+                    customCastButton.disabled = false;
+                } else {
+                    console.log('No Chromecast receivers found.');
+                    castStatusMessage.style.display = 'block';
+                    castStatusMessage.textContent = 'No Chromecast devices found on your network.';
+                    customCastButton.disabled = true;
+                }
+            }
+            
+            function updateCastButton() {
+                if (isCasting) {
+                    castIconOff.style.display = 'none';
+                    castIconOn.style.display = 'block';
+                } else {
+                    castIconOff.style.display = 'block';
+                    castIconOn.style.display = 'none';
+                }
             }
         }
 
         function loadMedia() {
-            if (typeof cast !== 'undefined' && cast.framework && cast.framework.CastContext) {
-                const context = cast.framework.CastContext.getInstance();
-                const session = context.getCurrentSession();
+            if (currentSession) {
+                const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+                mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
+                mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+                mediaInfo.metadata.title = 'SoundHelix Test Song';
+                mediaInfo.metadata.images = [new chrome.cast.Image('https://www.soundhelix.com/pub/logo.png')];
                 
-                if (session) {
-                    const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-                    mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
-                    mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                    mediaInfo.metadata.title = 'SoundHelix Test Song';
-                    mediaInfo.metadata.images = [new chrome.cast.Image('https://www.soundhelix.com/pub/logo.png')];
-                    
-                    const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                    
-                    session.loadMedia(request).then(
-                        function() {
-                            console.log('Test stream loaded and playing successfully.');
-                        },
-                        function(errorCode) {
-                            console.error('Error loading test media: ' + errorCode);
-                        }
-                    );
-                }
-            } else {
-                console.error("Cannot load media. Modern cast API not available.");
+                const request = new chrome.cast.media.LoadRequest(mediaInfo);
+                
+                currentSession.loadMedia(request, onMediaSuccess, onError);
             }
+        }
+        
+        function onMediaSuccess() {
+            console.log('Test stream loaded and playing successfully.');
         }
     </script>
 </body>
