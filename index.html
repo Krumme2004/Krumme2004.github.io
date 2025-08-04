@@ -88,88 +88,92 @@
     <p>Click the cast button to stream this radio station to your Chromecast device.</p>
     
     <script>
-        window.__onGCastApiAvailable = function(isAvailable) {
-            if (isAvailable) {
-                initializeCastApi();
-            } else {
-                console.error("Google Cast API is not available.");
-            }
-        };
+    window.__onGCastApiAvailable = function(isAvailable) {
+        if (isAvailable) {
+            initializeCastApi();
+        } else {
+            console.error("Google Cast API is not available.");
+        }
+    };
 
-        function initializeCastApi() {
-            const context = cast.framework.CastContext.getInstance();
-            const options = new cast.framework.CastOptions();
-            options.receiverApplicationId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-            context.setOptions(options);
+    function initializeCastApi() {
+        const context = cast.framework.CastContext.getInstance();
+        const options = new cast.framework.CastOptions();
+        options.receiverApplicationId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+        context.setOptions(options);
 
-            const customCastButton = document.getElementById('custom-cast-button');
-            const castStatusMessage = document.getElementById('cast-status-message');
-            const castIconOff = document.getElementById('cast-icon-off');
-            const castIconOn = document.getElementById('cast-icon-on');
+        const customCastButton = document.getElementById('custom-cast-button');
+        const castStatusMessage = document.getElementById('cast-status-message');
+        const castIconOff = document.getElementById('cast-icon-off');
+        const castIconOn = document.getElementById('cast-icon-on');
+        
+        customCastButton.addEventListener('click', () => {
+            context.requestSession();
+        });
+
+        function updateCastButton() {
+            const castState = context.getCastState();
+            const deviceState = context.getDeviceState();
             
-            customCastButton.addEventListener('click', () => {
-                context.requestSession();
-            });
-
-            function updateCastButton() {
-                const castState = context.getCastState();
-                const deviceState = context.getDeviceState();
-                
-                if (castState === cast.framework.CastState.CONNECTED) {
-                    console.log('Successfully connected to a Chromecast device!');
-                    castIconOff.style.display = 'none';
-                    castIconOn.style.display = 'block';
+            if (castState === cast.framework.CastState.CONNECTED) {
+                console.log('Successfully connected to a Chromecast device!');
+                castIconOff.style.display = 'none';
+                castIconOn.style.display = 'block';
+                castStatusMessage.style.display = 'none';
+                customCastButton.disabled = false;
+                loadMedia();
+            } else {
+                castIconOff.style.display = 'block';
+                castIconOn.style.display = 'none';
+                if (deviceState === cast.framework.DeviceState.NO_DEVICES_AVAILABLE) {
+                    console.log('No Chromecast devices found on your network.');
+                    castStatusMessage.style.display = 'block';
+                    castStatusMessage.textContent = 'No Chromecast devices found on your network.';
+                    customCastButton.disabled = true;
+                } else if (deviceState === cast.framework.DeviceState.AVAILABLE) {
                     castStatusMessage.style.display = 'none';
                     customCastButton.disabled = false;
-                    loadMedia();
-                } else {
-                    castIconOff.style.display = 'block';
-                    castIconOn.style.display = 'none';
-                    if (deviceState === cast.framework.DeviceState.NO_DEVICES_AVAILABLE) {
-                        console.log('No Chromecast devices found on your network.');
-                        castStatusMessage.style.display = 'block';
-                        castStatusMessage.textContent = 'No Chromecast devices found on your network.';
-                        customCastButton.disabled = true;
-                    } else if (deviceState === cast.framework.DeviceState.AVAILABLE) {
-                        castStatusMessage.style.display = 'none';
-                        customCastButton.disabled = false;
-                    } else { 
-                        castStatusMessage.style.display = 'none';
-                        customCastButton.disabled = false;
-                    }
+                } else { 
+                    castStatusMessage.style.display = 'none';
+                    customCastButton.disabled = false;
                 }
             }
-            
-            context.addEventListener(cast.framework.CastContextEventType.STATE_CHANGED, function() {
-                updateCastButton();
-            });
-
+        }
+        
+        context.addEventListener(cast.framework.CastContextEventType.STATE_CHANGED, function() {
             updateCastButton();
-        }
+        });
 
-        function loadMedia() {
-            const context = cast.framework.CastContext.getInstance();
-            const session = context.getCurrentSession();
+        updateCastButton();
+    }
+
+    function loadMedia() {
+        const context = cast.framework.CastContext.getInstance();
+        const session = context.getCurrentSession();
+        
+        if (session) {
+            // **CORRECTION:** Removed the MIME type and set streamType to LIVE
+            const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals');
             
-            if (session) {
-                const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mp3');
-                
-                mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                mediaInfo.metadata.title = 'Classic Pop Denmark';
-                mediaInfo.metadata.images = [new chrome.cast.Image('https://classicpop.dk/img/logo.png')];
-                
-                const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                
-                session.loadMedia(request).then(
-                    function() {
-                        console.log('Stream loaded and playing successfully on Chromecast.');
-                    },
-                    function(errorCode) {
-                        console.error('Error loading media: ' + errorCode);
-                    }
-                );
-            }
+            // This is the crucial change
+            mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
+
+            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+            mediaInfo.metadata.title = 'Classic Pop Denmark';
+            mediaInfo.metadata.images = [new chrome.cast.Image('https://classicpop.dk/img/logo.png')];
+            
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            
+            session.loadMedia(request).then(
+                function() {
+                    console.log('Stream loaded and playing successfully on Chromecast.');
+                },
+                function(errorCode) {
+                    console.error('Error loading media: ' + errorCode);
+                }
+            );
         }
-    </script>
+    }
+</script>
 </body>
 </html>
