@@ -66,12 +66,12 @@
 </head>
 <body>
 
-    <h1>Chromecast Testo Filo</h1>
-    <h2>Audio Stream Test</h2>
+    <h1>Chromecast Test</h1>
+    <h2>Audio Stream Test pls</h2>
 
     <audio controls>
-        <source src="SoundHelix-Song-1.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
     </audio>
 
     <div id="cast-button-container">
@@ -180,7 +180,7 @@
 
         function loadMedia() {
             if (currentSession) {
-                const mediaInfo = new chrome.cast.media.MediaInfo('SoundHelix-Song-1.mp3');
+                const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
                 mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
                 mediaInfo.metadata.title = 'SoundHelix Test Song';
