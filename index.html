@@ -67,7 +67,7 @@
 <body>
 
     <h1>Chromecast Test</h1>
-    <h2>Audio Stream Test pls</h2>
+    <h2>Audio Stream Test I SEE WHATS HAPPENING ERE</h2>
 
     <audio controls>
     <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
@@ -95,6 +95,16 @@
     <script>
         let currentSession = null;
         let isCasting = false;
+
+        // Moved to the global scope
+        function onError(error) {
+            console.error('Cast API error:', error);
+            // Optional: Add a UI element to show the user the error
+        }
+        
+        function onMediaSuccess() {
+            console.log('Test stream loaded and playing successfully.');
+        }
 
         window.__onGCastApiAvailable = function(isAvailable) {
             if (isAvailable) {
@@ -133,10 +143,11 @@
                 console.log('Cast API initialized successfully!');
             }
 
-            function onError(error) {
-                console.error('Cast API error:', error);
-            }
-
+            // This onError is now a local function, but we have a global one as well
+            // Since chrome.cast.initialize is called here, it will use this local one
+            // We should use a single onError function for simplicity and consistency
+            // I'll leave this as-is for now to show the fix, but merging them is a good practice.
+            
             function onSessionSuccess(session) {
                 console.log('Session started:', session);
                 currentSession = session;
@@ -180,7 +191,7 @@
 
         function loadMedia() {
             if (currentSession) {
-                const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+                const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'audio/mpeg');
                 mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
                 mediaInfo.metadata.title = 'SoundHelix Test Song';
@@ -188,12 +199,9 @@
                 
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
                 
+                // This will now successfully find the global onError function
                 currentSession.loadMedia(request, onMediaSuccess, onError);
             }
-        }
-        
-        function onMediaSuccess() {
-            console.log('Test stream loaded and playing successfully.');
         }
     </script>
 </body>
