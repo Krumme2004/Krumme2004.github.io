@@ -106,6 +106,12 @@
                 currentSession.loadMedia(request, onMediaSuccess, onError);
             }
         }
+
+        window.castFrameworkOptions = {
+          receiverApplicationId: 'CC1AD845', // Default Media Receiver
+          autoJoinPolicy: 'origin_scoped'
+        };
+        cast.framework.CastContext.getInstance().setOptions(window.castFrameworkOptions);
     </script>
 </body>
 </html>
