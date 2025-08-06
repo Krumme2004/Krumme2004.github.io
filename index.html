@@ -191,11 +191,11 @@
 
         function loadMedia() {
             if (currentSession) {
-                const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'audio/mpeg');
+                const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
                 mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                mediaInfo.metadata.title = 'SoundHelix Test Song';
-                mediaInfo.metadata.images = [new chrome.cast.Image('https://www.soundhelix.com/pub/logo.png')];
+                mediaInfo.metadata.title = 'Radio Als';
+                mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Favicon.png')];
                 
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
                 
