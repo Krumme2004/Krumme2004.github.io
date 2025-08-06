@@ -67,7 +67,7 @@
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.ffm2</h2>
+    <h2>Testing Facility Attempt 12xe1.who15</h2>
 
     <audio controls>
     <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
@@ -154,6 +154,11 @@
                 isCasting = true;
                 updateCastButton();
                 currentSession.addUpdateListener(sessionUpdateListener);
+                // Pause local audio when casting starts
+                var audioElem = document.querySelector('audio');
+                if (audioElem && !audioElem.paused) {
+                    audioElem.pause();
+                }
                 loadMedia();
             }
 
