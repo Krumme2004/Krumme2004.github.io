@@ -67,28 +67,14 @@
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.q114</h2>
+    <h2>Testing Facility Attempt 12xe1.ffm2</h2>
 
     <audio controls>
     <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
     Your browser does not support the audio element.
     </audio>
 
-    <div id="cast-button-container">
-        <button id="custom-cast-button">
-            <svg id="cast-icon-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 16.1A5 5 0 0 1 5.9 11M2 12.05A9 9 0 0 1 9.95 3M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/>
-                <line x1="2" y1="20" x2="2.01" y2="20"/>
-            </svg>
-            <svg id="cast-icon-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                 <path d="M2 16.1A5 5 0 0 1 5.9 11M2 12.05A9 9 0 0 1 9.95 3M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/>
-                 <line x1="2" y1="20" x2="2.01" y2="20"/>
-                 <path d="M22 6V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2"/>
-                 <line x1="16" y1="20" x2="16" y2="20"/>
-            </svg>
-        </button>
-        <div id="cast-status-message" style="display: none;"></div>
-    </div>
+    <google-cast-launcher id="custom-cast-button"></google-cast-launcher>
     
     <p>Click the cast button to stream a test audio file.</p>
     
