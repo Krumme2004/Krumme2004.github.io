@@ -66,8 +66,8 @@
 </head>
 <body>
 
-    <h1>Chromecast Test</h1>
-    <h2>WHAT CAN I SAY EXCEPT</h2>
+    <h1>Radio Als Chromecast</h1>
+    <h2>Testing Facility Attempt 12xe1.p3</h2>
 
     <audio controls>
     <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
@@ -194,8 +194,8 @@
                 const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
                 mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                mediaInfo.metadata.title = 'SoundHelix Test Song';
-                mediaInfo.metadata.images = [new chrome.cast.Image('https://www.soundhelix.com/pub/logo.png')];
+                mediaInfo.metadata.title = 'Radio Als';
+                mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Logo%20NY%20hjemmeside___serialized1.png')];
                 
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
                 
