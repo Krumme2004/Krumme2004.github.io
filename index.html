@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chromecast Testing</title>
     
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <script src="https://www.gstatic.com/cast/sdk/libs/caf_sender/v3/cast_framework.js"></script>
     
     <style>
         body { 
@@ -106,12 +106,6 @@
                 currentSession.loadMedia(request, onMediaSuccess, onError);
             }
         }
-
-        window.castFrameworkOptions = {
-          receiverApplicationId: 'CC1AD845', // Default Media Receiver
-          autoJoinPolicy: 'origin_scoped'
-        };
-        cast.framework.CastContext.getInstance().setOptions(window.castFrameworkOptions);
     </script>
 </body>
 </html>
