@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chromecast Test File</title>
+    <title>Chromecast Testing</title>
     
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
     
@@ -24,7 +24,7 @@
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.pag14</h2>
+    <h2>Testing Facility Attempt 12xe1.hm23</h2>
 
     <audio controls>
         <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
@@ -32,7 +32,7 @@
     </audio>
 
     <div id="cast-button-container">
-        <google-cast-launcher id="castbutton"></google-cast-launcher>
+        <google-cast-launcher id="custom-cast-button"></google-cast-launcher>
     </div>
     
     <p>Click the cast button to stream a test audio file.</p>
@@ -40,7 +40,6 @@
     <script>
         let currentSession = null;
         
-        // Use a single set of global error and success functions
         function onError(error) {
             console.error('Cast API error:', error);
         }
@@ -58,9 +57,7 @@
         };
 
         function initializeCastApi() {
-            // Note: We no longer need to find the custom SVG elements or add a click listener.
-            // The `<google-cast-launcher>` handles that automatically.
-            
+            // No custom button logic is needed here
             const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
             const apiConfig = new chrome.cast.ApiConfig(
                 sessionRequest,
@@ -100,10 +97,8 @@
 
         function loadMedia() {
             if (currentSession) {
-                // Ensure the content type is correct for the stream.
-                // The URL is an MP3 stream, so 'audio/mpeg' is the correct MIME type.
                 const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
-                mediaInfo.streamType = chrome.cast.media.StreamType.LIVE; // Correct for a radio stream
+                mediaInfo.streamType = chrome.cast.media.StreamType.LIVE; 
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
                 mediaInfo.metadata.title = 'Radio Als';
                 mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Favicon.png')];
