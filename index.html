@@ -67,7 +67,7 @@
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.f15</h2>
+    <h2>Testing Facility Attempt 12xe1.q114</h2>
 
     <audio controls>
     <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
@@ -192,7 +192,7 @@
         function loadMedia() {
             if (currentSession) {
                 const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'audio/mpeg');
-                mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
+                mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
                 mediaInfo.metadata.title = 'SoundHelix Test Song';
                 mediaInfo.metadata.images = [new chrome.cast.Image('https://www.soundhelix.com/pub/logo.png')];
