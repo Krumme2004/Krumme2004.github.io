@@ -19,93 +19,25 @@
         h1, h2 {
             color: #2c3e50;
         }
-        
-        #custom-cast-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s ease;
-        }
-
-        #custom-cast-button:hover {
-            transform: scale(1.1);
-        }
-
-        #custom-cast-button svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        #cast-status-message {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #7f8c8d;
-        }
-
-        #cast-icon-off {
-            fill: none;
-            stroke: #34495e;
-        }
-
-        #cast-icon-on {
-            fill: #3498db;
-            stroke: none;
-        }
-
-        #custom-cast-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.who15</h2>
+    <h2>Testing Facility Attempt 12xe1.oogabooga</h2>
 
     <audio controls>
-    <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
-    Your browser does not support the audio element.
+        <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
 
     <div id="cast-button-container">
-        <button id="custom-cast-button">
-            <svg id="cast-icon-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 16.1A5 5 0 0 1 5.9 11M2 12.05A9 9 0 0 1 9.95 3M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/>
-                <line x1="2" y1="20" x2="2.01" y2="20"/>
-            </svg>
-            <svg id="cast-icon-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                 <path d="M2 16.1A5 5 0 0 1 5.9 11M2 12.05A9 9 0 0 1 9.95 3M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/>
-                 <line x1="2" y1="20" x2="2.01" y2="20"/>
-                 <path d="M22 6V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2"/>
-                 <line x1="16" y1="20" x2="16" y2="20"/>
-            </svg>
-        </button>
-        <div id="cast-status-message" style="display: none;"></div>
+        <google-cast-launcher id="cast-button"></google-cast-launcher>
     </div>
     
     <p>Click the cast button to stream a test audio file.</p>
     
     <script>
-        let currentSession = null;
-        let isCasting = false;
-
-        // Moved to the global scope
-        function onError(error) {
-            console.error('Cast API error:', error);
-            // Optional: Add a UI element to show the user the error
-        }
-        
-        function onMediaSuccess() {
-            console.log('Test stream loaded and playing successfully.');
-        }
-
         window.__onGCastApiAvailable = function(isAvailable) {
             if (isAvailable) {
                 initializeCastApi();
@@ -115,127 +47,44 @@
         };
 
         function initializeCastApi() {
-            const customCastButton = document.getElementById('custom-cast-button');
-            const castStatusMessage = document.getElementById('cast-status-message');
-            const castIconOff = document.getElementById('cast-icon-off');
-            const castIconOn = document.getElementById('cast-icon-on');
+            // Get the CastContext singleton instance
+            const castContext = cast.framework.CastContext.getInstance();
             
-            // Set up the API configuration for the older API
-            const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
-            const apiConfig = new chrome.cast.ApiConfig(
-                sessionRequest,
-                onSessionSuccess,
-                onReceiverListener,
-                chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED
-            );
-
-            chrome.cast.initialize(apiConfig, onInitSuccess, onError);
-
-            customCastButton.addEventListener('click', () => {
-                if (isCasting) {
-                    currentSession.stop();
-                } else {
-                    chrome.cast.requestSession(onSessionSuccess, onError);
-                }
+            // Set the cast options with the receiver application ID
+            castContext.setOptions({
+                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
             });
 
-            function onInitSuccess() {
-                console.log('Cast API initialized successfully!');
-            }
-
-            // This onError is now a local function, but we have a global one as well
-            // Since chrome.cast.initialize is called here, it will use this local one
-            // We should use a single onError function for simplicity and consistency
-            // I'll leave this as-is for now to show the fix, but merging them is a good practice.
-            
-            function onSessionSuccess(session) {
-                console.log('Session started:', session);
-                currentSession = session;
-                isCasting = true;
-                updateCastButton();
-                currentSession.addUpdateListener(sessionUpdateListener);
-                // Pause local audio when casting starts
-                var audioElem = document.querySelector('audio');
-                if (audioElem && !audioElem.paused) {
-                    audioElem.pause();
+            // Add an event listener to handle media loading when the session starts
+            castContext.addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, (event) => {
+                switch (event.sessionState) {
+                    case cast.framework.SessionState.SESSION_STARTED:
+                    case cast.framework.SessionState.SESSION_RESUMED:
+                        console.log('Session started/resumed:', castContext.getCurrentSession());
+                        loadMedia(castContext.getCurrentSession());
+                        break;
+                    case cast.framework.SessionState.SESSION_ENDED:
+                        console.log('Session ended.');
+                        break;
                 }
-                loadMedia();
-            }
-
-            function sessionUpdateListener(isAlive) {
-                if (!isAlive) {
-                    isCasting = false;
-                    currentSession = null;
-                    updateCastButton();
-                }
-            }
-
-            function onReceiverListener(availability) {
-                if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
-                    console.log('Chromecast receivers are available.');
-                    castStatusMessage.style.display = 'none';
-                    customCastButton.disabled = false;
-                } else {
-                    console.log('No Chromecast receivers found.');
-                    castStatusMessage.style.display = 'block';
-                    castStatusMessage.textContent = 'No Chromecast devices found on your network.';
-                    customCastButton.disabled = true;
-                }
-            }
-            
-            function updateCastButton() {
-                if (isCasting) {
-                    castIconOff.style.display = 'none';
-                    castIconOn.style.display = 'block';
-                } else {
-                    castIconOff.style.display = 'block';
-                    castIconOn.style.display = 'none';
-                }
-            }
+            });
         }
 
-        function loadMedia() {
-            if (currentSession) {
-                const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
-                mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
-                mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                mediaInfo.metadata.title = 'Radio Als';
-                mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Favicon.png')];
-                
-                const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                
-                currentSession.loadMedia(request, onMediaSuccess, onError);
-            }
-        }
-
-        // Global functions must be defined at the global scope, outside of `initializeCastApi`.
-        function onMediaSuccess(mediaSession) {
-            console.log('Test stream loaded successfully.');
+        function loadMedia(session) {
+            const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
+            // This is the crucial part for a live stream, it should play automatically.
+            mediaInfo.streamType = chrome.cast.media.StreamType.LIVE; 
             
-            // Add a short delay to ensure the player is ready.
-            // This is the key part of the fix.
-            setTimeout(() => {
-                // Now, manually pause and then play to "kickstart" the playback.
-                if (mediaSession.playerState === chrome.cast.media.PlayerState.PAUSED) {
-                    console.log('Media is paused. Sending play command...');
-                    mediaSession.play(null,
-                        () => {
-                            console.log('Play command sent successfully.');
-                        },
-                        (error) => {
-                            console.error('Play command failed:', error);
-                        }
-                    );
-                } else {
-                    console.log('Media is already playing or in a different state.');
-                    // If it's playing, we don't need to do anything.
-                    // If it's not, we might want to investigate the state further.
-                }
-            }, 1000); // 1-second delay
-        }
-
-        function onError(error) {
-            console.error('Cast API error:', error);
+            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+            mediaInfo.metadata.title = 'Radio Als';
+            mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Favicon.png')];
+            
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            
+            // loadMedia should now work automatically without needing a manual play/pause.
+            session.loadMedia(request)
+                .then(() => console.log('Test stream loaded and playing successfully.'))
+                .catch(error => console.error('Load media failed:', error));
         }
     </script>
 </body>
