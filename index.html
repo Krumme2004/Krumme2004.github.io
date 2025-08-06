@@ -67,7 +67,7 @@
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.p3</h2>
+    <h2>Testing Facility Attempt 12xe1.f15</h2>
 
     <audio controls>
     <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
@@ -191,17 +191,46 @@
 
         function loadMedia() {
             if (currentSession) {
-                const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
+                const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'audio/mpeg');
                 mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                mediaInfo.metadata.title = 'Radio Als';
-                mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Logo%20NY%20hjemmeside___serialized1.png')];
+                mediaInfo.metadata.title = 'SoundHelix Test Song';
+                mediaInfo.metadata.images = [new chrome.cast.Image('https://www.soundhelix.com/pub/logo.png')];
                 
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
                 
-                // This will now successfully find the global onError function
                 currentSession.loadMedia(request, onMediaSuccess, onError);
             }
+        }
+
+        // Global functions must be defined at the global scope, outside of `initializeCastApi`.
+        function onMediaSuccess(mediaSession) {
+            console.log('Test stream loaded successfully.');
+            
+            // Add a short delay to ensure the player is ready.
+            // This is the key part of the fix.
+            setTimeout(() => {
+                // Now, manually pause and then play to "kickstart" the playback.
+                if (mediaSession.playerState === chrome.cast.media.PlayerState.PAUSED) {
+                    console.log('Media is paused. Sending play command...');
+                    mediaSession.play(null,
+                        () => {
+                            console.log('Play command sent successfully.');
+                        },
+                        (error) => {
+                            console.error('Play command failed:', error);
+                        }
+                    );
+                } else {
+                    console.log('Media is already playing or in a different state.');
+                    // If it's playing, we don't need to do anything.
+                    // If it's not, we might want to investigate the state further.
+                }
+            }, 1000); // 1-second delay
+        }
+
+        function onError(error) {
+            console.error('Cast API error:', error);
         }
     </script>
 </body>
