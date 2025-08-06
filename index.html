@@ -69,6 +69,11 @@
     <h1>Chromecast Test File</h1>
     <h2>Audio Stream Test</h2>
 
+    <audio controls>
+    <source src="SoundHelix-Song-1.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+    </audio>
+
     <div id="cast-button-container">
         <button id="custom-cast-button">
             <svg id="cast-icon-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -175,7 +180,7 @@
 
         function loadMedia() {
             if (currentSession) {
-                const mediaInfo = new chrome.cast.media.MediaInfo('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+                const mediaInfo = new chrome.cast.media.MediaInfo('SoundHelix-Song-1.mp3');
                 mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
                 mediaInfo.metadata.title = 'SoundHelix Test Song';
