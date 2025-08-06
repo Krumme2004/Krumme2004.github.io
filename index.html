@@ -24,24 +24,24 @@
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.dumb_ai</h2>
+    <h2>Testing Facility Attempt 12xe1.aiwasdumb</h2>
 
     <audio controls>
         <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 
-    <google-cast-launcher></google-cast-launcher>
+    <button id="castBtn">Cast to Chromecast</button>
     
     <p>Click the cast button to stream a test audio file.</p>
     
     <script>
         let currentSession = null;
-        
+
         function onError(error) {
             console.error('Cast API error:', error);
         }
-        
+
         function onMediaSuccess() {
             console.log('Test stream loaded and playing successfully.');
         }
@@ -55,7 +55,6 @@
         };
 
         function initializeCastApi() {
-            // No custom button logic is needed here
             const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
             const apiConfig = new chrome.cast.ApiConfig(
                 sessionRequest,
@@ -63,49 +62,50 @@
                 onReceiverListener,
                 chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED
             );
-
             chrome.cast.initialize(apiConfig, onInitSuccess, onError);
+        }
 
-            function onInitSuccess() {
-                console.log('Cast API initialized successfully!');
-            }
-            
-            function onSessionSuccess(session) {
-                console.log('Session started:', session);
-                currentSession = session;
-                currentSession.addUpdateListener(sessionUpdateListener);
-                loadMedia();
-            }
+        function onInitSuccess() {
+            console.log('Cast API initialized successfully!');
+        }
 
-            function sessionUpdateListener(isAlive) {
-                if (!isAlive) {
-                    console.log('Session ended.');
-                    currentSession = null;
-                }
-            }
+        function onSessionSuccess(session) {
+            console.log('Session started:', session);
+            currentSession = session;
+            currentSession.addUpdateListener(sessionUpdateListener);
+            loadMedia();
+        }
 
-            function onReceiverListener(availability) {
-                if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
-                    console.log('Chromecast receivers are available.');
-                } else {
-                    console.log('No Chromecast receivers found.');
-                }
+        function sessionUpdateListener(isAlive) {
+            if (!isAlive) {
+                console.log('Session ended.');
+                currentSession = null;
+            }
+        }
+
+        function onReceiverListener(availability) {
+            if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
+                console.log('Chromecast receivers are available.');
+            } else {
+                console.log('No Chromecast receivers found.');
             }
         }
 
         function loadMedia() {
             if (currentSession) {
                 const mediaInfo = new chrome.cast.media.MediaInfo('https://stream.classicpop.dk/radioals', 'audio/mpeg');
-                mediaInfo.streamType = chrome.cast.media.StreamType.LIVE; 
+                mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
                 mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
                 mediaInfo.metadata.title = 'Radio Als';
                 mediaInfo.metadata.images = [new chrome.cast.Image('https://radioals.dk/onewebmedia/RadioAls_Favicon.png')];
-                
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                
                 currentSession.loadMedia(request, onMediaSuccess, onError);
             }
         }
+
+        document.getElementById('castBtn').addEventListener('click', function() {
+            chrome.cast.requestSession(onSessionSuccess, onError);
+        });
     </script>
 </body>
 </html>
