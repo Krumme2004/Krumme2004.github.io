@@ -205,18 +205,22 @@
         // New onMediaSuccess function to handle a live stream correctly
         function onMediaSuccess(mediaSession) {
             console.log('Test stream loaded successfully.');
-            
+
+            // Listen for play events on the sender page's audio element
+            var audioElem = document.querySelector('audio');
+            if (audioElem) {
+                audioElem.addEventListener('play', function() {
+                    if (isCasting && mediaSession.playerState === chrome.cast.media.PlayerState.PAUSED) {
+                        // Force reload to live on Chromecast
+                        loadMedia();
+                    }
+                });
+            }
+
             // Add a listener to the media session to handle state changes
             mediaSession.addUpdateListener(() => {
-                // If the player state is LOADING and we are not casting, try to play.
-                // This is a robust way to "kickstart" the playback.
-                if (mediaSession.playerState === chrome.cast.media.PlayerState.PLAYING) {
-                    console.log('Stream is now playing.');
-                    // We can remove the listener now that it's playing.
-                    mediaSession.removeUpdateListener(this);
-                } else if (mediaSession.playerState === chrome.cast.media.PlayerState.PAUSED) {
-                    // If it pauses right after loading, play it.
-                    console.log('Stream paused unexpectedly, sending play command.');
+                if (mediaSession.playerState === chrome.cast.media.PlayerState.PAUSED) {
+                    // If paused on Chromecast, force play (optional)
                     mediaSession.play(null, () => {}, onError);
                 }
             });
