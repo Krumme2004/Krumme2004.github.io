@@ -67,11 +67,11 @@
 <body>
 
     <h1>Radio Als Chromecast</h1>
-    <h2>Testing Facility Attempt 12xe1.unckas</h2>
+    <h2>Testing Facility Attempt 12xe1.unckat</h2>
 
     <google-cast-launcher></google-cast-launcher>
 
-    <audio controls>
+    <audio controls autoplay>
         <source src="https://stream.classicpop.dk/radioals" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
@@ -221,6 +221,35 @@
                 }
             });
         }
+
+        // Try to autoplay audio on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            var audioElem = document.querySelector('audio');
+            if (audioElem) {
+                audioElem.play().catch(function(e) {
+                    console.log('Autoplay was prevented:', e);
+                });
+
+                // Make the stream "unpausable"
+                let wasPausedByUser = false;
+                audioElem.addEventListener('pause', function() {
+                    // Mark that the user paused
+                    wasPausedByUser = true;
+                });
+
+                audioElem.addEventListener('play', function() {
+                    if (wasPausedByUser) {
+                        // Reload the stream to jump to live
+                        audioElem.src = audioElem.querySelector('source').src;
+                        audioElem.load();
+                        audioElem.play().catch(function(e) {
+                            console.log('Autoplay was prevented after reload:', e);
+                        });
+                        wasPausedByUser = false;
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
